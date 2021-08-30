@@ -32,7 +32,7 @@ Umi 会自动检测 `dependencies` 和 `devDependencies` 里的 umi 插件，比
 export default {
   presets: ['./preset', 'foo/presets'],
   plugins: ['./plugin'],
-}
+};
 ```
 
 通常用于几种情况：
@@ -42,11 +42,11 @@ export default {
 
 注意：
 
-* 请不要配置 npm 包的插件，否则会报重复注册的错误
+- 请不要配置 npm 包的插件，否则会报重复注册的错误
 
 ### 环境变量
 
-还可通过环境变量 `UMI\_PRESETS` 和 `UMI\_PLUGINS` 注册额外插件。
+还可通过环境变量 `UMI_PRESETS` 和 `UMI_PLUGINS` 注册额外插件。
 
 比如：
 
@@ -56,7 +56,7 @@ $ UMI_PRESETS=/a/b/preset.js umi dev
 
 注意：
 
-* 项目里不建议使用，通常用于基于 umi 的框架二次封装
+- 项目里不建议使用，通常用于基于 umi 的框架二次封装
 
 ## 检查插件注册情况
 
@@ -100,7 +100,7 @@ $ umi plugin list --key
 ```js
 export default {
   mock: false,
-}
+};
 ```
 
 会禁用 Umi 内置的 mock 插件及其功能。
@@ -115,8 +115,8 @@ export default {
 
 ```js
 export default {
-  mock: { exclude: ['./foo'] }
-}
+  mock: { exclude: ['./foo'] },
+};
 ```
 
 这里的 mock 是 mock 插件的 key。
@@ -126,6 +126,5 @@ export default {
 ```js
 export default {
   bar: { ...balabala },
-}
+};
 ```
-

@@ -1,6 +1,6 @@
 {
   "name": "@umijs/types",
-  "version": "3.2.2",
+  "version": "3.5.17",
   "description": "@umijs/types",
   "main": "lib/index.js",
   "types": "index",
@@ -25,14 +25,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/cheerio": "0.22.17",
-    "@types/express": "4.17.6",
-    "@types/webpack": "4.41.12",
-    "@types/webpack-bundle-analyzer": "2.13.3",
-    "@umijs/babel-preset-umi": "3.2.2",
-    "@umijs/core": "3.2.2",
-    "@umijs/server": "3.2.2",
-    "@umijs/utils": "3.2.2",
-    "webpack-chain": "6.4.0"
+    "@umijs/babel-preset-umi": "3.5.17",
+    "@umijs/core": "3.5.17",
+    "@umijs/deps": "3.5.17",
+    "@umijs/renderer-react": "3.5.17",
+    "@umijs/server": "3.5.17",
+    "@umijs/utils": "3.5.17",
+    "webpack-chain": "6.5.1"
   }
 }

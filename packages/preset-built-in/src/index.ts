@@ -17,6 +17,7 @@ export default function () {
       require.resolve('./plugins/generateFiles/umi'),
 
       // bundle configs
+      require.resolve('./plugins/features/404'),
       require.resolve('./plugins/features/alias'),
       require.resolve('./plugins/features/analyze'),
       require.resolve('./plugins/features/autoprefixer'),
@@ -32,12 +33,15 @@ export default function () {
       require.resolve('./plugins/features/devServer'),
       require.resolve('./plugins/features/devtool'),
       require.resolve('./plugins/features/dynamicImport'),
+      require.resolve('./plugins/features/dynamicImportSyntax'),
       require.resolve('./plugins/features/exportStatic'),
       require.resolve('./plugins/features/externals'),
+      require.resolve('./plugins/features/extraBabelIncludes'),
       require.resolve('./plugins/features/extraBabelPlugins'),
       require.resolve('./plugins/features/extraBabelPresets'),
       require.resolve('./plugins/features/extraPostCSSPlugins'),
       require.resolve('./plugins/features/forkTSChecker'),
+      require.resolve('./plugins/features/fastRefresh'),
       require.resolve('./plugins/features/globalCSS'),
       require.resolve('./plugins/features/globalJS'),
       require.resolve('./plugins/features/hash'),
@@ -45,6 +49,7 @@ export default function () {
       require.resolve('./plugins/features/inlineLimit'),
       require.resolve('./plugins/features/lessLoader'),
       require.resolve('./plugins/features/manifest'),
+      require.resolve('./plugins/features/mfsu/mfsu'),
       require.resolve('./plugins/features/mountElementId'),
       require.resolve('./plugins/features/mpa'),
       require.resolve('./plugins/features/nodeModulesTransform'),
@@ -62,6 +67,9 @@ export default function () {
       require.resolve('./plugins/features/terserOptions'),
       require.resolve('./plugins/features/theme'),
       require.resolve('./plugins/features/umiInfo'),
+      require.resolve('./plugins/features/runtimeHistory'),
+      require.resolve('./plugins/features/webpack5'),
+      require.resolve('./plugins/features/workerLoader'),
 
       // html
       require.resolve('./plugins/features/html/favicon'),

@@ -9,9 +9,7 @@
 ```tsx
 import { Link } from 'umi';
 
-export default () => (
-  <Link to="/list">Go to list page</Link>
-);
+export default () => <Link to="/list">Go to list page</Link>;
 ```
 
 ## 命令式
@@ -34,4 +32,4 @@ export default (props) => (
 );
 ```
 
-更多命令式的跳转方法，详见 [api#history](/zh/api#history)。
+更多命令式的跳转方法，详见 [api#history](/zh-CN/api#history)。

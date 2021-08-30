@@ -50,7 +50,7 @@ test('routeToChunkName no route', () => {
       route: {},
     }),
   ).toEqual('');
-
+  // @ts-expect-error
   expect(routeToChunkName()).toEqual('');
 });
 
@@ -62,6 +62,18 @@ test('routeToChunkName cwd', () => {
         component: '/users/test/pages/users/[id].jsx',
       },
       cwd: '/users/test',
+    }),
+  ).toEqual('p__users__id');
+});
+
+test('routeToChunkName cwd escape char', () => {
+  expect(
+    routeToChunkName({
+      route: {
+        path: '/users/:id',
+        component: '/users/c++/pages/users/[id].jsx',
+      },
+      cwd: '/users/c++',
     }),
   ).toEqual('p__users__id');
 });

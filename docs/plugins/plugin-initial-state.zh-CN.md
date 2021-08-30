@@ -18,7 +18,7 @@
 
 #### getInitialState
 
-* Type: `() => Prommise<any>`
+- Type: `() => Promise<any>`
 
 该配置是一个 async 的 function。会在整个应用最开始执行，返回值会作为全局共享的数据。Layout 插件、Access 插件以及用户都可以通过 `useModel('@@initialState')` 直接获取到这份数据。
 
@@ -40,41 +40,43 @@ export async function getInitialState() {
 import { useModel } from 'umi';
 
 export default () => {
-  const { initialState, loading, error, refresh, setInitialState } = useModel('@@initialState');
-  return <>{initialState}</>
+  const { initialState, loading, error, refresh, setInitialState } = useModel(
+    '@@initialState',
+  );
+  return <>{initialState}</>;
 };
 ```
 
 #### initialState
 
-* Type: `any`
-* Default: `undefined`
+- Type: `any`
+- Default: `undefined`
 
 运行时配置中，getInitialState 的返回值。
 
 #### loading
 
-* Type: `boolean`
-* Default: `true`
+- Type: `boolean`
+- Default: `true`
 
 getInitialState 是否处于 loading 状态，在首次获取到初始状态前，页面其他部分的渲染都会被阻止。loading 可用于判断 refresh 是否在进行中。
 
 #### error
 
-* Type: `Error`
-* Default: `undefined`
+- Type: `Error`
+- Default: `undefined`
 
 当运行时配置中，getInitialState throw Error 时，会将错误储存在 error 中。
 
 #### refresh
 
-* Type: `() => void`
+- Type: `() => void`
 
 重新执行 getInitialState 方法，并获取新数据。
 
 #### setInitialState
 
-* Type: `(state: any) => void`
+- Type: `(state: any) => void`
 
 手动设置 initialState 的值，手动设置完毕会将 loading 置为 false.
 

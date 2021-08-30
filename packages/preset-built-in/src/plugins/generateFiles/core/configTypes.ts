@@ -1,6 +1,7 @@
+import joi from '@umijs/deps/compiled/@hapi/joi';
+// @ts-ignore
+import joi2Types from '@umijs/deps/compiled/joi2types';
 import { IApi } from '@umijs/types';
-import joi2Types from 'joi2types';
-import joi from '@hapi/joi';
 
 export default (api: IApi) => {
   api.onGenerateFiles(async () => {
@@ -25,9 +26,14 @@ export default (api: IApi) => {
         }),
         {},
       );
+    const interfaceName = 'IConfigFromPlugins';
+    // catch
     const content = await joi2Types(joi.object(properties).unknown(), {
-      interfaceName: 'IConfigFromPlugins',
-      bannerComment: '/** Created by Umi Plugin **/',
+      interfaceName,
+      bannerComment: '// Created by Umi Plugin',
+    }).catch((err: Error) => {
+      api.logger.error('Config types generated error', err);
+      return Promise.resolve(`export interface ${interfaceName} {}`);
     });
     api.writeTmpFile({
       path: 'core/pluginConfig.d.ts',

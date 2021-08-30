@@ -4,7 +4,6 @@ translateHelp: true
 
 # 插件开发
 
-
 在 Umi 中，插件实际上就是一个 JS 模块，你需要定义一个插件的初始化方法并默认导出。如下示例：
 
 ```js
@@ -69,7 +68,7 @@ yarn create umi --plugin
 $ yarn
 ```
 
-> 你也可以使用 npm install ，因为有编写测试，所以安装了 puppetee，如果你安装失败，可能需要科学上网，或者使用淘宝源。
+> 你也可以使用 npm install ，因为有编写测试，所以安装了 puppeteer，如果你安装失败，可能需要科学上网，或者使用淘宝源。
 
 ### Umi@3 插件命名特性
 
@@ -97,34 +96,33 @@ export default function (api: IApi) {
     $('body').prepend(`<h1>hello umi plugin</h1>`);
     return $;
   });
-
 }
 ```
 
-为我们的插件增加一个配，使用 [describe](/plugins/api#describe-id-string-key-string-config--default-schema-onchange--) 注册配置。
+为我们的插件增加一个配置，使用 [describe](/plugins/api#describe-id-string-key-string-config--default-schema-onchange--) 注册配置。
 
 ```ts
-  api.describe({
-    key: 'mainPath',
-    config: {
-      schema(joi) {
-        return joi.string();
-      },
+api.describe({
+  key: 'mainPath',
+  config: {
+    schema(joi) {
+      return joi.string();
     },
-  });
+  },
+});
 ```
 
 增加我们插件的主逻辑
 
 ```ts
-  if (api.userConfig.mainPath) {
-    api.modifyRoutes((routes: any[]) => {
-      return resetMainPath(routes, api.config.mainPath);
-    });
-  }
+if (api.userConfig.mainPath) {
+  api.modifyRoutes((routes: any[]) => {
+    return resetMainPath(routes, api.config.mainPath);
+  });
+}
 ```
 
-> 这里需要注意的是，我们在判断是取的是 api.userConfig，而在 api 的回调中使用的是 api.config，你可以理解为 api.userConfig 是配置中的值， api.config 是插件修改后的值，这里可以是任意插件修改。
+> 这里需要注意的是，我们在判断时取的是 api.userConfig，而在 api 的回调中使用的是 api.config，你可以理解为 api.userConfig 是配置中的值， api.config 是插件修改后的值，这里可以是任意插件修改。
 
 在演示中使用我们的插件：
 
@@ -135,7 +133,7 @@ import { defineConfig } from 'umi';
 
 export default defineConfig({
   plugins: [require.resolve('../lib')],
-  mainPath:'/home'
+  mainPath: '/home',
 });
 ```
 
@@ -177,8 +175,8 @@ Starting the development server...
 ```ts
 export default {
   plugins: [require.resolve('../../../lib')],
-  mainPath: '/home'
-}
+  mainPath: '/home',
+};
 ```
 
 新建 page 页面，新建 `test/fixtures/normal/pages/home.tsx`

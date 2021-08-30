@@ -1,22 +1,25 @@
 // @ts-ignore
 import { Logger } from '@umijs/core';
-import { lodash, portfinder, PartialProps, semver } from '@umijs/utils';
-import express, { Express, RequestHandler } from 'express';
+import compress, { CompressionOptions } from '@umijs/deps/compiled/compression';
+import express, { Express, RequestHandler } from '@umijs/deps/compiled/express';
 import {
   createProxyMiddleware,
+  Filter as ProxyFilter,
   Options as ProxyOptions,
   RequestHandler as ProxyRequestHandler,
-  Filter as ProxyFilter,
-} from 'http-proxy-middleware';
+} from '@umijs/deps/compiled/http-proxy-middleware';
+import sockjs, {
+  Connection,
+  Server as SocketServer,
+} from '@umijs/deps/compiled/sockjs';
+import spdy, { ServerOptions } from '@umijs/deps/compiled/spdy';
+import { createDebug, lodash, PartialProps, portfinder } from '@umijs/utils';
 import * as http from 'http';
-import { ServerOptions } from 'spdy';
 import * as url from 'url';
-import https from 'https';
-import compress, { CompressionOptions } from 'compression';
-import sockjs, { Connection, Server as SocketServer } from 'sockjs';
 import { getCredentials } from './utils';
 
 const logger = new Logger('@umijs/server');
+const debug = createDebug('umi:server:Server');
 
 interface IServerProxyConfigItem extends ProxyOptions {
   path?: string | string[];
@@ -41,7 +44,6 @@ export interface IServerOpts {
   beforeMiddlewares?: RequestHandler<any>[];
   compilerMiddleware?: RequestHandler<any> | null;
   https?: IHttps | boolean;
-  http2?: boolean;
   headers?: {
     [key: string]: string;
   };
@@ -72,8 +74,8 @@ const defaultOpts: Required<PartialProps<IServerOpts>> = {
   beforeMiddlewares: [],
   compilerMiddleware: null,
   compress: true,
-  https: !!process.env.HTTPS,
-  http2: false,
+  // enable by default if add HTTP2
+  https: !!process.env.HTTP2 ? true : !!process.env.HTTPS,
   onListening: (argv) => argv,
   onConnection: () => {},
   onConnectionClose: () => {},
@@ -203,30 +205,53 @@ class Server {
     this.app.use(compress(compressOpts));
   }
 
+  deleteRoutes() {
+    let startIndex = null;
+    let endIndex = null;
+    this.app._router.stack.forEach((item: any, index: number) => {
+      if (item.name === 'PROXY_START') startIndex = index;
+      if (item.name === 'PROXY_END') endIndex = index;
+    });
+    debug(
+      `routes before changed: ${this.app._router.stack
+        .map((item: any) => item.name || 'undefined name')
+        .join(', ')}`,
+    );
+    if (startIndex !== null && endIndex !== null) {
+      this.app._router.stack.splice(startIndex, endIndex - startIndex + 1);
+    }
+    debug(
+      `routes after changed: ${this.app._router.stack
+        .map((item: any) => item.name || 'undefined name')
+        .join(', ')}`,
+    );
+  }
+
   /**
    * proxy middleware for dev
    * not coupled with build tools (like webpack, rollup, ...)
    */
-  setupProxy() {
-    if (!Array.isArray(this.opts.proxy)) {
-      if (this.opts.proxy && 'target' in this.opts.proxy) {
-        this.opts.proxy = [this.opts.proxy];
+  setupProxy(proxyOpts?: IServerProxyConfig, isWatch: boolean = false) {
+    let proxy = proxyOpts || this.opts.proxy;
+    if (!Array.isArray(proxy)) {
+      if (proxy && 'target' in proxy) {
+        proxy = [proxy];
       } else {
-        this.opts.proxy = Object.keys(this.opts.proxy || {}).map((context) => {
+        proxy = Object.keys(proxy || {}).map((context) => {
           let proxyOptions: IServerProxyConfigItem;
           // For backwards compatibility reasons.
           const correctedContext = context
             .replace(/^\*$/, '**')
             .replace(/\/\*$/, '');
 
-          if (typeof this.opts.proxy?.[context] === 'string') {
+          if (typeof proxy?.[context] === 'string') {
             proxyOptions = {
               context: correctedContext,
-              target: this.opts.proxy[context],
+              target: proxy[context],
             };
           } else {
             proxyOptions = {
-              ...(this.opts.proxy?.[context] || {}),
+              ...(proxy?.[context] || {}),
               context: correctedContext,
             };
           }
@@ -255,6 +280,7 @@ class Server {
                 : proxyConfig.target;
             const realUrl = new URL(req.url || '', target)?.href || '';
             proxyRes.headers['x-real-url'] = realUrl;
+            proxyConfig.onProxyRes?.(proxyRes, req, res);
           },
         });
       }
@@ -262,7 +288,31 @@ class Server {
       return;
     };
 
-    this.opts.proxy.forEach((proxyConfigOrCallback) => {
+    // refresh proxy config
+    let startIndex = null;
+    let endIndex = null;
+    let routesLength = null;
+
+    // when proxy opts change, delete before proxy middlwares
+    if (isWatch) {
+      this.app._router.stack.forEach((item: any, index: number) => {
+        if (item.name === 'PROXY_START') startIndex = index;
+        if (item.name === 'PROXY_END') endIndex = index;
+      });
+      if (startIndex !== null && endIndex !== null) {
+        this.app._router.stack.splice(startIndex, endIndex - startIndex + 1);
+      }
+      routesLength = this.app._router.stack.length;
+
+      this.deleteRoutes();
+    }
+
+    // log proxy middleware before
+    this.app.use(function PROXY_START(req, res, next) {
+      next();
+    });
+
+    proxy.forEach((proxyConfigOrCallback) => {
       let proxyMiddleware: ProxyRequestHandler | undefined;
 
       let proxyConfig =
@@ -308,6 +358,19 @@ class Server {
         }
       });
     });
+
+    this.app.use(function PROXY_END(req, res, next) {
+      next();
+    });
+
+    // log proxy middleware after
+    if (isWatch) {
+      const newRoutes = this.app._router.stack.splice(
+        routesLength,
+        this.app._router.stack.length - routesLength,
+      );
+      this.app._router.stack.splice(startIndex, 0, ...newRoutes);
+    }
   }
 
   sockWrite({
@@ -324,18 +387,11 @@ class Server {
     });
   }
 
-  private isHttp2() {
-    return this.opts.http2 !== false;
-  }
-
   createServer() {
     const httpsOpts = this.getHttpsOptions();
     if (httpsOpts) {
-      if (semver.gte(process.version, '10.0.0') && !this.isHttp2()) {
-        this.listeningApp = https.createServer(httpsOpts, this.app);
-      } else {
-        this.listeningApp = require('spdy').createServer(httpsOpts, this.app);
-      }
+      // http2 using spdy, HTTP/2 by default when using https
+      this.listeningApp = spdy.createServer(httpsOpts, this.app);
     } else {
       this.listeningApp = http.createServer(this.app);
     }

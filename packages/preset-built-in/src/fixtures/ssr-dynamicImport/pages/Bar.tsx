@@ -1,13 +1,13 @@
 import React from 'react';
 import styles from './Bar.less';
 
-const Bar = props => {
-  return (
-    <h2 className={styles.title}>{props.title}</h2>
-  );
+const Bar: React.FC<{ title: any[] }> & {
+  getInitialProps: (props: any) => any;
+} = (props) => {
+  return <h2 className={styles.title}>{props.title}</h2>;
 };
 
-Bar.getInitialProps = async () => {
+Bar.getInitialProps = () => {
   return {
     title: 'Bar',
   };

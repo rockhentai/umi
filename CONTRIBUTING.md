@@ -61,6 +61,7 @@ $ npm run release
 $ npm run release -- --publish-only
 $ npm run release -- --skip-git-status-check
 $ npm run release -- --skip-build
+$ npm run release -- --otp
 ```
 
 ## Create new package
@@ -98,6 +99,33 @@ $ yarn docs add docs/routing --title Routing
 
 Umi 3 examples in `examples/*` directory
 
+### Running the Examples apps
+
+Running examples:
+
+```sh
+yarn example dev examples/normal
+```
+
+### Create new examples
+
+Such as creating example `hello-world`.
+
+```bash
+$ mkdir -p examples/hello-world
+$ yarn bootstrap:examples
+```
+
+Then you will find the `README.md` and `package.json` is generated in `examples/hello-world`.
+
+```bash
+$ tree examples/hello-world
+examples/hello-world
+├── pages/index.tsx
+├── README.md
+└── package.json
+```
+
 ## Benchmarks
 
 if you want to add a benchmark, you can add `examples/*/benchmark.js` like this:
@@ -108,7 +136,7 @@ module.exports = (suite) => {
   // add tests
   suite
     // your logic
-    .add('ssr#normal /', )
+    .add('ssr#normal /')
     // your logic
     .add('ssr#normal#stream /');
 };

@@ -1,6 +1,6 @@
+import { ApplyPluginsType, Plugin } from '@umijs/runtime';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ApplyPluginsType, Plugin } from '@umijs/runtime';
 
 interface IOpts {
   routes: any[];
@@ -9,6 +9,7 @@ interface IOpts {
   defaultTitle?: string;
   rootElement?: string | HTMLElement;
   path?: string;
+  callback?: () => void;
 }
 
 function getRootContainer(opts: { routes: any[]; path: string }) {
@@ -61,10 +62,12 @@ export function renderClient(opts: IOpts): any {
       typeof opts.rootElement === 'string'
         ? document.getElementById(opts.rootElement)
         : opts.rootElement;
+    const callback = opts.callback || (() => {});
     // @ts-ignore
     ReactDOM[window.g_useSSR ? 'hydrate' : 'render'](
       rootContainer,
       rootElement,
+      callback,
     );
   } else {
     return rootContainer;

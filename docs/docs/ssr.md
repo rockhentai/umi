@@ -1,6 +1,7 @@
 ---
 translateHelp: true
 ---
+
 # 服务端渲染（SSR）
 
 ## 什么是服务端渲染？
@@ -14,7 +15,6 @@ translateHelp: true
 第一张，单页应用（SPA）和服务端渲染过的（SSR）站点在**社交分享**时的区别：
 
 <img style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 6px 0px;" src="https://user-images.githubusercontent.com/13595509/68102160-5e66da00-ff0c-11e9-82e8-7c73cca1b20f.png" width="600" />
-
 
 第二张，**白屏时间**上 SSR 较少，因为当 HTML 文档返回时，已经有对应的内容。（见 Network）
 
@@ -31,7 +31,7 @@ translateHelp: true
 
 服务端渲染，首先得有后端服务器（一般是 Node.js）才可以使用，如果我没有后端服务器，也想用在上面提到的两个场景，那么推荐使用**预渲染**。
 
-预渲染与服务端渲染唯一的不同点在于**渲染时机**，服务端渲染的时机是在用户访问时执行渲染（即**实时渲染**，数据一般是最新的），预渲染的时机是在项目构建时，当用户访问时，数据不是一定是最新的（如果数据没有实时性，则可以直接考虑预渲染）。
+预渲染与服务端渲染唯一的不同点在于**渲染时机**，服务端渲染的时机是在用户访问时执行渲染（即**实时渲染**，数据一般是最新的），预渲染的时机是在项目构建时，当用户访问时，数据不一定是最新的（如果数据没有实时性，则可以直接考虑预渲染）。
 
 预渲染（Pre Render）在构建时执行渲染，将渲染后的 HTML 片段生成静态 HTML 文件。无需使用 web 服务器实时动态编译 HTML，适用于**静态站点生成**。
 
@@ -58,7 +58,7 @@ Umi 3 结合自身业务场景，在 SSR 上做了大量优化及开发体验的
 ```js
 export default {
   ssr: {},
-}
+};
 ```
 
 ## 开发
@@ -72,13 +72,12 @@ export default {
 如果与后端框架在开发模式下一起使用时，可通过配置来关闭 `umi dev` 下的服务端渲染行为：
 
 ```js
-
 export default {
   ssr: {
     // 默认为 true
     devServerRender: false,
   },
-}
+};
 ```
 
 ## 数据预获取
@@ -125,7 +124,7 @@ export default (props) => {
 
 ```tsx
 // pages/index.tsx
-import { IGetInitialProps } from 'umi;
+import { IGetInitialProps } from 'umi';
 import React from 'react';
 
 const Home = (props) => {
@@ -169,31 +168,32 @@ export default Home;
 
 - `match`： 与客户端页面 props 中的 `match` 保持一致，有当前路由的相关数据。
 - `isServer`：是否为服务端在执行该方法。
+- `route`：当前路由对象
 - `history`：history 对象
 
 ### 扩展 ctx 参数
 
 为了结合数据流框架，我们提供了 `modifyGetInitialPropsCtx` 方法，由插件或应用来扩展 `ctx` 参数，以 `dva` 为例：
 
-```jsx
+```ts
 // plugin-dva/runtime.ts
 export const ssr = {
   modifyGetInitialPropsCtx: async (ctx) => {
     ctx.store = getApp()._store;
   },
-}
+};
 ```
 
 然后在页面中，可以通过获取到 `store`：
 
-```jsx
+```tsx
 // pages/index.tsx
 const Home = () => <div />;
 
 Home.getInitialProps = async (ctx) => {
   const state = ctx.store.getState();
   return state;
-}
+};
 
 export default Home;
 ```
@@ -206,13 +206,13 @@ export const ssr = {
   modifyGetInitialPropsCtx: async (ctx) => {
     ctx.title = 'params';
     return ctx;
-  }
-}
+  },
+};
 ```
 
 同时可以使用 `getInitialPropsCtx` 将服务端参数扩展到 `ctx` 中，例如：
 
-```diff
+```js
 app.use(async (req, res) => {
   // 或者从 CDN 上下载到 server 端
   // const serverPath = await downloadServerBundle('http://cdn.com/bar/umi.server.js');
@@ -228,7 +228,7 @@ app.use(async (req, res) => {
       req,
     },
   });
-})
+});
 ```
 
 在使用的时候，就有 `req` 对象，不过需要注意的是，只在服务端执行时才有此参数：
@@ -239,7 +239,7 @@ Page.getInitialProps = async (ctx) => {
     // console.log(ctx.req);
   }
   return {};
-}
+};
 ```
 
 则在执行 `getInitialProps` 方法时，除了以上两个固定参数外，还会获取到 `title` 和 `store` 参数。
@@ -290,18 +290,20 @@ app.use(async (req, res) => {
 
     // 扩展 getInitialProps 在服务端渲染中的参数
     // getInitialPropsCtx: {},
+
+    // manifest，正常情况下不需要
   });
 
   // support stream content
   if (content instanceof Stream) {
     html.pipe(res);
-    html.on('end', function() {
+    html.on('end', function () {
       res.end();
     });
   } else {
     res.send(res);
   }
-})
+});
 ```
 
 `render` 方法参数和返回值如下：
@@ -320,6 +322,8 @@ app.use(async (req, res) => {
   mountElementId?: string;
   // 上下文数据，可用来标记服务端渲染页面时的状态
   context?: object
+  // ${protocol}://${host} 扩展 location 对象
+  origin?: string;
 }
 ```
 
@@ -336,19 +340,43 @@ app.use(async (req, res) => {
 }
 ```
 
+## 示例
+
+目前做了两个示例分别是基于[koa](https://github.com/umijs/umi/tree/master/examples/ssr-koa)和[egg](https://github.com/umijs/umi/tree/master/examples/ssr-with-eggjs)的，示例内置 dva 数据流和国际化解决方案，代码部分有注释，可参照进行个性化的修改。
+
+## polyfill
+
+Umi 3 默认移除了 DOM/BOM 浏览器 API 在 Node.js 的 polyfill，如果应用确实需要 polyfill 一些浏览器对象，可以使用 `beforeRenderServer` 运行时事件 API 进行扩展
+
+```js
+// app.ts
+export const ssr = {
+  beforeRenderServer: async ({ env, location, history, mode, context }) => {
+    // global 为 Node.js 下的全局变量
+    // 避免直接 mock location，这样会造成一些环境判断失效
+    global.mockLocation = location;
+
+    // 国际化
+    if (location.pathname.indexOf('zh-CN') > -1) {
+      global.locale = 'zh-CN';
+    }
+  },
+};
+```
+
 ## 动态加载（dynamicImport）
 
 完美兼容客户端动态加载，配置如下：
 
-```js
+```ts
 // .umirc.ts
 export default {
   ssr: {},
   dynamicImport: {},
-}
+};
 ```
 
-使用动态加载后，启动和构建会自动开启 [manifest](/config#manifest) 配置，并在产物目录中生成 `asset-manifest.json` 做资源映射，并自动将页面对应的资源注入到 HTML 中，避免开启动态加载后，**页面首屏闪烁**的问题。
+使用动态加载后，启动和构建会自动开启 [manifest](/zh-CN/config#manifest) 配置，并在产物目录中生成 `asset-manifest.json` 做资源映射，并自动将页面对应的资源注入到 HTML 中，避免开启动态加载后，**页面首屏闪烁**的问题。
 
 ```bash
 - dist
@@ -377,7 +405,7 @@ export default {
   ssr: {
     mode: 'stream',
   },
-}
+};
 ```
 
 ## 使用预渲染
@@ -390,7 +418,7 @@ export default {
 export default {
   ssr: {},
   exportStatic: {},
-}
+};
 ```
 
 执行 `umi build`，会将输出渲染后的 HTML
@@ -445,7 +473,7 @@ export default {
 
 ## 页面标题渲染
 
-[@umijs/preset-react](/plugins/preset-react#umijspreset-react) 插件集中已内置对标题的渲染，通过以下步骤使用：
+[@umijs/preset-react](/zh-CN/plugins/preset-react#umijspreset-react) 插件集中已内置对标题的渲染，通过以下步骤使用：
 
 安装：
 
@@ -455,12 +483,12 @@ $ yarn add @umijs/preset-react
 
 在页面中，即直接可以渲染标题：
 
-```jsx
+```tsx
 // pages/bar.tsx
 import React from 'react';
 import { Helmet } from 'umi';
 
-export default props => {
+export default (props) => {
   return (
     <>
       {/* 可自定义需不需要编码 */}
@@ -483,7 +511,7 @@ export default props => {
 export default {
   ssr: {},
   exportStatic: {},
-}
+};
 ```
 
 <img src="https://user-images.githubusercontent.com/13595509/80310631-52e6d280-880e-11ea-9a9a-0942c0e24658.png" width="600" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 6px 0px;" />
@@ -492,7 +520,7 @@ export default {
 
 ### 与 dva 结合使用
 
-[@umijs/preset-react](/plugins/preset-react#umijspreset-react) 插件集中已内置 dva，通过以下步骤使用：
+[@umijs/preset-react](/zh-CN/plugins/preset-react#umijspreset-react) 插件集中已内置 dva，通过以下步骤使用：
 
 ```bash
 $ yarn add @umijs/preset-react
@@ -503,8 +531,8 @@ $ yarn add @umijs/preset-react
 ```js
 export default {
   ssr: {},
-  dva: {}
-}
+  dva: {},
+};
 ```
 
 这时候 `getInitialProps(ctx)` 中的 `ctx` 就会有 `store` 属性，可执行 `dispatch`，并返回初始化数据。
@@ -516,7 +544,7 @@ Page.getInitialProps = async (ctx) => {
     type: 'bar/getData',
   });
   return store.getState();
-}
+};
 ```
 
 ## 包大小分析
@@ -531,6 +559,10 @@ $ ANALYZE=1 umi build
 ```
 
 <img width="600" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 6px 0px;" src="https://user-images.githubusercontent.com/13595509/80446129-8b8ac700-8948-11ea-82a8-54d94501a672.png" />
+
+## 谁在使用？
+
+<code src="./ssrUsers.tsx" inline />
 
 ## FAQ
 
@@ -573,10 +605,43 @@ export default () => {
 }
 ```
 
+3.如果是第三方库可以通过 umi 提供的 `dynamic` 动态加载组件
+
+```
+import React from 'react';
+import { dynamic } from 'umi';
+const renderLoading = () => <p>组件动态加载中...</p>
+export default dynamic({
+    loader: async () => {
+        // 动态加载第三方组件
+        const { default: DynamicComponent } = await import(
+            /* webpackChunkName: "dynamic-component" */ 'dynamic-component'
+        );
+        return DynamicComponent;
+    },
+    loading: () => renderLoading(),
+});
+```
+
+避免 ssr 渲染时报 `did not match.`警告，使用时候 ssr 应当渲染相同`loading`组件
+
+```
+import React from 'react';
+import { isBrowser } from 'umi';
+import DynamicComponent from 'DynamicComponent';
+export default () => {
+  if(isBrowser()) return <DynamicComponent />
+  return renderLoading()
+}
+```
+
+### Helmet 结合 stream 渲染无法显示 title
+
+因为 react-helmet 暂不支持 stream 渲染，如果使用 Helmet ，请使用 `mode: 'string'` 方式渲染。[nfl/react-helmet#322](https://github.com/nfl/react-helmet/issues/322)
+
 ### antd pro 怎样使用服务端渲染？
 
-首先，[antd pro](https://github.com/ant-design/ant-design-pro/) 作为中后台项目,没有 SEO 需求，不适合做服务端渲染；
-从技术角度来讲，antd pro 在 render 里大量使用 DOM/BOM 方法，服务端渲染将 DOM/BOM 操作改至副作用（`useEffect` 或 `componentDidMount` 周期中），可以给 antd pro 提 PR。
+首先，[antd pro](https://github.com/ant-design/ant-design-pro/) 作为中后台项目,没有 SEO 需求，不适合做服务端渲染；从技术角度来讲，antd pro 在 render 里大量使用 DOM/BOM 方法，服务端渲染将 DOM/BOM 操作改至副作用（`useEffect` 或 `componentDidMount` 周期中），可以给 antd pro 提 PR。
 
 ### 为什么不能 external 服务端中的一些模块
 
@@ -586,7 +651,7 @@ export default () => {
 
 综合考虑，Umi 3 SSR 不会对服务端文件（`umi.server.js`）做 external。
 
-### `Prop `dangerouslySetInnerHTML` did not match.` 报错
+### `Prop`dangerouslySetInnerHTML`did not match.` 报错
 
 只有 `div` 标签 `dangerouslySetInnerHTML` 属性才能被 SSR 渲染，正常的写法应该是：
 

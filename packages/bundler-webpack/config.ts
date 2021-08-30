@@ -1,13 +1,16 @@
 export default {
-  outputPath: './bundled/',
+  outputPath: './bundled/js/',
   entry: {
     webpackHotDevClient: './src/webpackHotDevClient/webpackHotDevClient',
   },
   nodeModulesTransform: {
-    type: 'none',
+    type: 'all',
   },
   devtool: false,
   define: {
     'process.env': {},
+  },
+  targets: {
+    ie: 11,
   },
 };

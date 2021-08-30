@@ -1,10 +1,18 @@
 import { IApi, NextFunction, Request, Response } from '@umijs/types';
-import { Stream } from 'stream';
 import { extname, join } from 'path';
 import { matchRoutes, RouteConfig } from 'react-router-config';
+import { Stream } from 'stream';
 import { getHtmlGenerator } from '../htmlUtils';
 
-const ASSET_EXTNAMES = ['.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+const ASSET_EXTNAMES = [
+  '.ico',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.svg',
+  '.json',
+];
 
 export default ({
   api,

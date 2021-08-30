@@ -1,7 +1,7 @@
-import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
 import { IApi } from '@umijs/types';
-import { winPath } from '@umijs/utils';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { runtimePath } from '../constants';
 
 export default function (api: IApi) {
   const {
@@ -28,11 +28,19 @@ export default function (api: IApi) {
       join(
         __dirname,
         // @ts-ignore
-        api.config.history === false ? 'history.sham.tpl' : 'history.tpl',
+        api.config.runtimeHistory
+          ? 'history.runtime.tpl'
+          : api.config.history === false
+          ? 'history.sham.tpl'
+          : 'history.tpl',
       ),
       'utf-8',
     );
     const history = api.config.history!;
+
+    // history 不可能为 false，这里是为了 ts 编译
+    if (!history) return;
+
     const { type, options = {} } = history;
 
     api.writeTmpFile({
@@ -49,9 +57,7 @@ export default function (api: IApi) {
           null,
           2,
         ),
-        runtimePath: winPath(
-          dirname(require.resolve('@umijs/runtime/package.json')),
-        ),
+        runtimePath,
       }),
     });
   });
@@ -60,8 +66,19 @@ export default function (api: IApi) {
     // @ts-ignore
     if (api.config.history === false) return [];
 
+    if (api.config.runtimeHistory) {
+      return {
+        specifiers: [
+          'history',
+          'setCreateHistoryOptions',
+          'getCreateHistoryOptions',
+        ],
+        source: `./history`,
+      };
+    }
+
     return {
-      specifiers: ['history', 'setCreateHistoryOptions'],
+      specifiers: ['history'],
       source: `./history`,
     };
   });

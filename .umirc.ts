@@ -26,13 +26,12 @@ function getMenus(opts: { lang?: string; base: '/docs' | '/plugins' }) {
           '/plugins/plugin-qiankun',
           '/plugins/plugin-request',
           '/plugins/plugin-sass',
-          '/plugins/plugin-webpack-5',
         ],
       },
       {
         title: 'Plugin Develop',
         'title_zh-CN': '插件开发',
-        children: ['/plugins/api', '/plugins/test'],
+        children: ['/plugins/api', '/plugins/best-practice'],
       },
     ],
     '/docs': [
@@ -76,9 +75,11 @@ function getMenus(opts: { lang?: string; base: '/docs' | '/plugins' }) {
         'title_zh-CN': 'Umi 进阶',
         children: [
           '/docs/load-on-demand',
+          '/docs/fast-refresh',
           '/docs/deployment',
           '/docs/use-umi-ui',
           '/docs/ssr',
+          '/docs/mfsu',
         ],
       },
       {
@@ -109,7 +110,15 @@ function getMenus(opts: { lang?: string; base: '/docs' | '/plugins' }) {
 const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
-  ssr: {},
+  ...(isDev
+    ? {
+        webpack5: {},
+        dynamicImport: {},
+        mfsu: {},
+      }
+    : {
+        ssr: {},
+      }),
   favicon: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
   mode: 'site',
   title: 'UmiJS',

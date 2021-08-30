@@ -26,7 +26,7 @@ import React from 'react';
 import { Helmet } from 'umi';
 
 const Application = () => {
- return (
+  return (
     <div className="application">
       <Helmet>
         <meta charSet="utf-8" />
@@ -35,7 +35,7 @@ const Application = () => {
       </Helmet>
     </div>
   );
-}
+};
 
 export default Application;
 ```
@@ -51,7 +51,5 @@ react-helmet 与 umi 中的 title 配置不能同时使用，可以通过配置 
 可配置 Helmet 组件属性 `encodeSpecialCharacters`，来关闭内容被编码
 
 ```jsx
-<Helmet encodeSpecialCharacters={false}>
-  ...
-</Helmet>
+<Helmet encodeSpecialCharacters={false}>...</Helmet>
 ```

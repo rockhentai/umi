@@ -1,18 +1,21 @@
+import { cleanup, render } from '@testing-library/react';
 import { Service } from '@umijs/core';
-import { Stream } from 'stream';
-import { join } from 'path';
-import { EOL } from 'os';
-import cheerio from 'cheerio';
-import { render, cleanup } from '@testing-library/react';
+import cheerio from '@umijs/deps/compiled/cheerio';
 import { rimraf } from '@umijs/utils';
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+import { EOL, platform } from 'os';
+import { join } from 'path';
+import { Stream } from 'stream';
 
 const fixtures = join(__dirname, 'fixtures');
 
-afterEach(() => {
-  cleanup();
-  delete process.env.__IS_SERVER;
+beforeEach(() => {
+  if (process.env.__IS_SERVER) {
+    delete process.env.__IS_SERVER;
+  }
 });
+
+afterEach(cleanup);
 
 test('api.writeTmpFile error in register stage', async () => {
   const cwd = join(fixtures, 'api-writeTmpFile');
@@ -74,7 +77,7 @@ test('api.writeTmpFile without ts-nocheck', async () => {
   rimraf.sync(tmpFile);
 });
 
-test('global js', async () => {
+xtest('global js', async () => {
   const cwd = join(fixtures, 'global-files');
   const service = new Service({
     cwd,
@@ -132,7 +135,6 @@ test('html', async () => {
 test('ssr', async () => {
   const cwd = join(fixtures, 'ssr');
   const tmpServerFile = join(cwd, '.umi-test', 'core', 'server.ts');
-  const tmpExportFile = join(cwd, '.umi-test', 'core', 'umiExports.ts');
 
   delete require.cache[tmpServerFile];
 
@@ -147,8 +149,6 @@ test('ssr', async () => {
     },
   });
   expect(existsSync(tmpServerFile)).toBeTruthy();
-  const { isBrowser } = require(tmpExportFile);
-  expect(isBrowser()).toEqual(true);
 
   const render = require(tmpServerFile).default;
   const { rootContainer, html } = await render({
@@ -166,7 +166,6 @@ test('ssr', async () => {
 test('ssr modifyServerHTML', async () => {
   const cwd = join(fixtures, 'ssr-modifyServerHTML');
   const tmpServerFile = join(cwd, '.umi-test', 'core', 'server.ts');
-  const tmpExportFile = join(cwd, '.umi-test', 'core', 'umiExports.ts');
 
   delete require.cache[tmpServerFile];
 
@@ -181,9 +180,6 @@ test('ssr modifyServerHTML', async () => {
     },
   });
   expect(existsSync(tmpServerFile)).toBeTruthy();
-  const { isBrowser } = require(tmpExportFile);
-  expect(isBrowser()).toEqual(true);
-
   const render = require(tmpServerFile).default;
   const { rootContainer, html } = await render({
     path: '/',
@@ -193,6 +189,37 @@ test('ssr modifyServerHTML', async () => {
     '<div><ul><li>hello</li><li>world</li></ul></div>';
   expect(rootContainer).toEqual(expectRootContainer);
   expect(html).toMatch('<script>alert(123);</script>');
+  const $ = cheerio.load(html);
+  expect($('#root').html()).toEqual(expectRootContainer);
+  rimraf.sync(join(cwd, '.umi-test'));
+});
+
+test('ssr beforeRenderServer', async () => {
+  const cwd = join(fixtures, 'ssr-beforeRenderServer');
+  const tmpServerFile = join(cwd, '.umi-test', 'core', 'server.ts');
+
+  delete require.cache[tmpServerFile];
+
+  const service = new Service({
+    cwd,
+    presets: [require.resolve('./index.ts')],
+  });
+  await service.run({
+    name: 'g',
+    args: {
+      _: ['g', 'tmp'],
+    },
+  });
+  expect(existsSync(tmpServerFile)).toBeTruthy();
+
+  const render = require(tmpServerFile).default;
+  const { rootContainer, html } = await render({
+    path: '/',
+    mountElementId: 'root',
+  });
+  const expectRootContainer =
+    '<div><h1>/</h1><ul><li>hello</li><li>world</li></ul></div>';
+  expect(rootContainer).toEqual(expectRootContainer);
   const $ = cheerio.load(html);
   expect($('#root').html()).toEqual(expectRootContainer);
   rimraf.sync(join(cwd, '.umi-test'));
@@ -256,14 +283,15 @@ test('ssr using stream', (done) => {
         path: '/',
         mode: 'stream',
         mountElementId: 'root',
+        // @ts-ignore
       }).then(({ html, rootContainer }) => {
         expect(rootContainer instanceof Stream).toBeTruthy();
         expect(html instanceof Stream).toBeTruthy();
-        const expectBytes = new Buffer(
+        const expectBytes = Buffer.from(
           '<div><ul><li>hello</li><li>world</li></ul></div>',
         );
-        let bytes = new Buffer('');
-        rootContainer.on('data', (chunk) => {
+        let bytes = Buffer.from('');
+        rootContainer.on('data', (chunk: any) => {
           bytes = Buffer.concat([bytes, chunk]);
         });
         rootContainer.on('end', () => {
@@ -275,6 +303,7 @@ test('ssr using stream', (done) => {
 });
 
 test('ssr htmlTemplate', async () => {
+  // @ts-ignore
   process.env.__IS_SERVER = true;
   const cwd = join(fixtures, 'ssr-htmlTemplate');
   const tmpServerFile = join(cwd, '.umi-test', 'core', 'server.ts');
@@ -332,7 +361,8 @@ test('ssr htmlTemplate', async () => {
   rimraf.sync(join(cwd, '.umi-test'));
 });
 
-test('ssr dynamicImport', async () => {
+xtest('ssr dynamicImport', async () => {
+  // @ts-ignore
   process.env.__IS_SERVER = true;
   const cwd = join(fixtures, 'ssr-dynamicImport');
   const corePath = join(cwd, '.umi-test', 'core');
@@ -355,6 +385,7 @@ test('ssr dynamicImport', async () => {
     'p__Bar.css': '/p__Bar.chunk.css',
   };
 
+  // without webpack, so export default
   const render = require(tmpServerFile).default;
   // render /
   const homeResult = await render({
@@ -383,4 +414,22 @@ test('ssr dynamicImport', async () => {
     '<link rel="stylesheet" href="/p__Bar.chunk.css" />',
   );
   rimraf.sync(join(cwd, '.umi-test'));
+});
+
+test('exportStatic', async () => {
+  const cwd = join(fixtures, 'exportStatic');
+  const service = new Service({
+    cwd,
+    presets: [require.resolve('../lib/index.js')],
+  });
+  await service.run({
+    name: 'build',
+    args: {},
+  });
+  expect(existsSync(join(cwd, 'dist', 'index.html'))).toBeTruthy();
+  if (platform() === 'win32') {
+    expect(existsSync(join(cwd, 'dist', 'list', '.id.html'))).toBeTruthy();
+  } else {
+    expect(existsSync(join(cwd, 'dist', 'list', ':id.html'))).toBeTruthy();
+  }
 });

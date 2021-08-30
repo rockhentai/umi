@@ -5,6 +5,7 @@ interface IOpts {
   routes: IRoute[];
   config: any;
   cwd?: string;
+  isServer?: boolean;
 }
 
 const SEPARATOR = '^^^';
@@ -13,7 +14,7 @@ const EMPTY_PATH = '_';
 // TODO:
 // 1. support dynamic import (and levels)
 // 2. require().default -> import in production? (for tree-shaking)
-export default function ({ routes, config, cwd }: IOpts) {
+export default function ({ routes, config, cwd, isServer }: IOpts) {
   // 因为要往 routes 里加无用的信息，所以必须 deep clone 一下，避免污染
   const clonedRoutes = lodash.cloneDeep(routes);
 
@@ -32,7 +33,7 @@ export default function ({ routes, config, cwd }: IOpts) {
         cwd,
       });
       // 解决 SSR 开启动态加载后，页面闪烁问题
-      if (config?.ssr && config?.dynamicImport) {
+      if (isServer && config?.dynamicImport) {
         route._chunkName = webpackChunkName;
       }
       route.component = [
@@ -61,15 +62,28 @@ export default function ({ routes, config, cwd }: IOpts) {
           const [component, webpackChunkName] = value.split(SEPARATOR);
           let loading = '';
           if (config.dynamicImport.loading) {
-            loading = `, loading: require('${config.dynamicImport.loading}').default`;
+            loading = `, loading: LoadingComponent`;
           }
-          return `dynamic({ loader: () => import(/* webpackChunkName: '${webpackChunkName}' */'${component}')${loading}})`;
+          // server routes can't using import() for avoiding OOM when `dynamicImport`
+          return isServer
+            ? `require('${component}').default`
+            : `dynamic({ loader: () => import(/* webpackChunkName: '${webpackChunkName}' */'${component}')${loading}})`;
         } else {
           return `require('${value}').default`;
         }
       case 'wrappers':
         const wrappers = value.map((wrapper: string) => {
-          return `require('${wrapper}').default`;
+          if (config.dynamicImport) {
+            let loading = '';
+            if (config.dynamicImport.loading) {
+              loading = `, loading: LoadingComponent`;
+            }
+            return isServer
+              ? `require('${wrapper}').default`
+              : `dynamic({ loader: () => import(/* webpackChunkName: 'wrappers' */'${wrapper}')${loading}})`;
+          } else {
+            return `require('${wrapper}').default`;
+          }
         });
         return `[${wrappers.join(', ')}]`;
       default:

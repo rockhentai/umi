@@ -13,9 +13,9 @@ import { renderRoutes } from '@umijs/renderer-react';
 
 export interface IOpts {
   path: string;
-  history: MemoryHistory;
-  basename: string;
-  pathname: string;
+  history?: MemoryHistory;
+  basename?: string;
+  pathname?: string;
   plugin: Plugin;
   routes: IRoute[];
   getInitialPropsCtx?: object;
@@ -52,8 +52,13 @@ interface IContext {
  * get current page component getPageInitialProps data
  * @param params
  */
-export const loadPageGetInitialProps = async ({ ctx,
-  opts, }: { ctx: IContext, opts: ILoadGetInitialPropsOpts }): Promise<ILoadGetInitialPropsValue> => {
+export const loadPageGetInitialProps = async ({
+  ctx,
+  opts,
+}: {
+  ctx: IContext;
+  opts: ILoadGetInitialPropsOpts;
+}): Promise<ILoadGetInitialPropsValue> => {
   const { routes, pathname = opts.path } = opts;
 
   // via {routes} to find `getInitialProps`
@@ -65,13 +70,12 @@ export const loadPageGetInitialProps = async ({ ctx,
       // preload for dynamicImport
       if (Component?.preload) {
         const preloadComponent = await Component.preload();
-        Component = preloadComponent.default || preloadComponent;
+        Component = preloadComponent?.default || preloadComponent;
       }
 
       if (Component && (Component as any)?.getInitialProps) {
-
         // handle ctx
-        ctx = Object.assign(ctx, { match, ...restRouteParams });
+        ctx = Object.assign(ctx, { match, route, ...restRouteParams });
 
         return Component.getInitialProps
           ? await Component.getInitialProps(ctx)
@@ -115,6 +119,7 @@ function getRootContainer(
       history: opts.history,
       routes: opts.routes,
       plugin: opts.plugin,
+      ctx: opts.ctx,
     },
   });
 }
@@ -138,20 +143,22 @@ export default async function renderServer(
     ...(opts.getInitialPropsCtx || {}),
   };
   // modify ctx
-  const ctx = await opts.plugin.applyPlugins({
-    key: 'ssr.modifyGetInitialPropsCtx',
-    type: ApplyPluginsType.modify,
-    initialValue: defaultCtx,
-    async: true,
-  }) || defaultCtx;
+  const ctx =
+    (await opts.plugin.applyPlugins({
+      key: 'ssr.modifyGetInitialPropsCtx',
+      type: ApplyPluginsType.modify,
+      initialValue: defaultCtx,
+      async: true,
+    })) || defaultCtx;
   // get pageInitialProps
   const { pageInitialProps, routesMatched } = await loadPageGetInitialProps({
     ctx,
-    opts
+    opts,
   });
   const rootContainer = getRootContainer({
-    ...opts,
+    ...(opts as IOpts),
     pageInitialProps,
+    ctx,
   });
   if (opts.mode === 'stream') {
     const pageHTML = ReactDOMServer[

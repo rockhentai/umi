@@ -1,5 +1,5 @@
-import { IApi } from 'umi';
 import { BundlerConfigType } from '@umijs/types';
+import { IApi } from 'umi';
 
 export default (api: IApi) => {
   api.describe({
@@ -35,16 +35,19 @@ export default (api: IApi) => {
     },
   });
   api.chainWebpack((webpackConfig, opts) => {
-    const { type } = opts;
+    const { type, mfsu } = opts;
     if (
-      (type == BundlerConfigType.csr && !process.env.ANALYZE_SSR) ||
-      (type === BundlerConfigType.ssr && !process.env.ANALYZE)
+      !mfsu &&
+      ((type == BundlerConfigType.csr && !process.env.ANALYZE_SSR) ||
+        (type === BundlerConfigType.ssr && !process.env.ANALYZE))
     ) {
       webpackConfig
         .plugin('bundle-analyzer')
-        .use(require('umi-webpack-bundle-analyzer').BundleAnalyzerPlugin, [
-          api.config?.analyze || {},
-        ]);
+        .use(
+          require('@umijs/deps/compiled/umi-webpack-bundle-analyzer')
+            .BundleAnalyzerPlugin,
+          [api.config?.analyze || {}],
+        );
     }
     return webpackConfig;
   });

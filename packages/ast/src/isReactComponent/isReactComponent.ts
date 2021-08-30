@@ -4,12 +4,12 @@ import { parse } from '../utils/parse';
 export function isReactComponent(code: string) {
   const ast = parse(code);
   let hasJSXElement = false;
-  traverse.default(ast as any, {
-    JSXElement(path) {
+  traverse.default(ast, {
+    JSXElement(path: any) {
       hasJSXElement = true;
       path.stop();
     },
-    JSXFragment(path) {
+    JSXFragment(path: any) {
       hasJSXElement = true;
       path.stop();
     },

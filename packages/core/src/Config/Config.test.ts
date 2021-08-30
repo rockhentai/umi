@@ -6,6 +6,7 @@ const fixtures = join(__dirname, 'fixtures');
 const { NODE_ENV } = process.env;
 afterEach(() => {
   // reset UMI_ENV
+  // @ts-ignore
   delete process.env.UMI_ENV;
   process.env.NODE_ENV = NODE_ENV;
 });
@@ -22,6 +23,24 @@ test('umirc-typescript', async () => {
   const cwd = join(fixtures, 'umirc-typescript');
   const service = new Service({
     cwd,
+  });
+  expect(service.userConfig).toEqual({ foo: 'bar' });
+});
+
+test('custom-config-file', async () => {
+  const cwd = join(fixtures, 'custom-config-file');
+  const service = new Service({
+    cwd,
+    configFiles: ['.foorc.js'],
+  });
+  expect(service.userConfig).toEqual({ foo: 'bar' });
+});
+
+test('custom-config-file-ts', async () => {
+  const cwd = join(fixtures, 'custom-config-file-ts');
+  const service = new Service({
+    cwd,
+    configFiles: ['.foorc.ts'],
   });
   expect(service.userConfig).toEqual({ foo: 'bar' });
 });

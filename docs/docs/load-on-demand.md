@@ -1,7 +1,6 @@
 # Load On Demand
 
-
-## How to endable
+## How to enable
 
 **Common use case**：To reduce first screen download cost, component with huge implementation / dependency can be split in differnet bundle. Let's say we have component `HugeA` with huge 3rd-party dependency, and this `HugeA` will not be used in first screen, that means it can be split out. We shall use `dynamic` in this case.
 
@@ -10,7 +9,7 @@ Load on demand is disabled by default in order to simplify deployment. You can e
 ```js
 export default {
   dynamicImport: {},
-}
+};
 ```
 
 ## How to use
@@ -21,16 +20,17 @@ export default {
 
 Usually work with [dynamic import syntax](https://github.com/tc39/proposal-dynamic-import).
 
-
 **Create dynamic component**
 
 ```js
 import { dynamic } from 'umi';
 
 export default dynamic({
-  loader: async function() {
+  loader: async function () {
     // webpackChunkName tells webpack create separate bundle for HugeA
-    const { default: HugeA } = await import(/* webpackChunkName: "external_A" */ './HugeA');
+    const { default: HugeA } = await import(
+      /* webpackChunkName: "external_A" */ './HugeA'
+    );
     return HugeA;
   },
 });
@@ -49,5 +49,5 @@ import AsyncHugeA from './AsyncHugeA';
 // 3. display HugeA whenever component downloaded
 export default () => {
   return <AsyncHugeA />;
-}
+};
 ```

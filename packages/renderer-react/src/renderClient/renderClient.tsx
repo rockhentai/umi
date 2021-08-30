@@ -1,7 +1,7 @@
-import * as ReactDOM from 'react-dom';
-import React, { useEffect } from 'react';
 import { ApplyPluginsType, Plugin, Router } from '@umijs/runtime';
-import { matchRoutes } from 'react-router-config';
+import React, { useEffect } from 'react';
+import { hydrate, render } from 'react-dom';
+import { matchRoutes, RouteConfig } from 'react-router-config';
 import { IRoute } from '..';
 import renderRoutes from '../renderRoutes/renderRoutes';
 
@@ -12,10 +12,12 @@ interface IRouterComponentProps {
   ssrProps?: object;
   defaultTitle?: string;
   dynamicImport?: boolean;
+  isServer?: boolean;
 }
 
 interface IOpts extends IRouterComponentProps {
   rootElement?: string | HTMLElement;
+  callback?: () => void;
 }
 
 function RouterComponent(props: IRouterComponentProps) {
@@ -24,11 +26,14 @@ function RouterComponent(props: IRouterComponentProps) {
   useEffect(() => {
     // first time using window.g_initialProps
     // switch route fetching data, if exact route reset window.getInitialProps
-    if ((window as any).g_initialProps) {
+    if ((window as any).g_useSSR) {
       (window as any).g_initialProps = null;
     }
     function routeChangeHandler(location: any, action?: string) {
-      const matchedRoutes = matchRoutes(props.routes, location.pathname);
+      const matchedRoutes = matchRoutes(
+        props.routes as RouteConfig[],
+        location.pathname,
+      );
 
       // Set title
       if (
@@ -70,11 +75,11 @@ export async function preloadComponent(
   pathname = window.location.pathname,
 ): Promise<IRoute[]> {
   // using matched routes not load all routes
-  const matchedRoutes = matchRoutes(readyRoutes, pathname);
+  const matchedRoutes = matchRoutes(readyRoutes as RouteConfig[], pathname);
   for (const matchRoute of matchedRoutes) {
     const route = matchRoute.route as IRoute;
     // load all preload function, because of only a chance to load
-    if (route.component?.preload) {
+    if (typeof route.component !== 'string' && route.component?.preload) {
       const preloadComponent = await route.component.preload();
       route.component = preloadComponent.default || preloadComponent;
     }
@@ -110,19 +115,21 @@ export default function renderClient(opts: IOpts) {
       typeof opts.rootElement === 'string'
         ? document.getElementById(opts.rootElement)
         : opts.rootElement;
+    const callback = opts.callback || (() => {});
+
     // flag showing SSR successed
     if (window.g_useSSR) {
       if (opts.dynamicImport) {
         // dynamicImport should preload current route component
         // first loades);
         preloadComponent(opts.routes).then(function () {
-          ReactDOM.hydrate(rootContainer, rootElement);
+          hydrate(rootContainer, rootElement, callback);
         });
       } else {
-        ReactDOM.hydrate(rootContainer, rootElement);
+        hydrate(rootContainer, rootElement, callback);
       }
     } else {
-      ReactDOM.render(rootContainer, rootElement);
+      render(rootContainer, rootElement, callback);
     }
   } else {
     return rootContainer;

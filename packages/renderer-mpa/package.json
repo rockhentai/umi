@@ -1,12 +1,13 @@
 {
   "name": "@umijs/renderer-mpa",
-  "version": "3.2.2",
+  "version": "3.5.17",
   "description": "@umijs/renderer-mpa",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "lib",
-    "src"
+    "src",
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -25,11 +26,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/react": "^16.9.34",
-    "@types/react-dom": "^16.9.6",
-    "@umijs/runtime": "3.2.2",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "@types/react": "^16.9.43",
+    "@types/react-dom": "^16.9.8",
+    "@umijs/runtime": "3.5.17"
+  },
+  "peerDependencies": {
+    "react": "16.x || 17.x",
+    "react-dom": "16.x || 17.x"
   },
   "sideEffects": false,
   "module": "dist/index.esm.js"

@@ -1,17 +1,19 @@
-import { IApi, IBundlerConfigType, BundlerConfigType } from '@umijs/types';
 import { Bundler as DefaultBundler, webpack } from '@umijs/bundler-webpack';
-import { join, resolve } from 'path';
+import { BundlerConfigType, IApi, IBundlerConfigType } from '@umijs/types';
+import { chalk, rimraf } from '@umijs/utils';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { rimraf, chalk } from '@umijs/utils';
+import { join, resolve } from 'path';
 import zlib from 'zlib';
 
 type Env = 'development' | 'production';
 
 export async function getBundleAndConfigs({
   api,
+  mfsu,
   port,
 }: {
   api: IApi;
+  mfsu?: boolean;
   port?: number;
 }) {
   // bundler
@@ -37,24 +39,27 @@ export async function getBundleAndConfigs({
         env,
         type,
         port,
+        mfsu,
         hot: type === BundlerConfigType.csr && process.env.HMR !== 'none',
         entry: {
           umi: join(api.paths.absTmpPath!, 'umi.ts'),
         },
         // @ts-ignore
         bundleImplementor,
-        async modifyBabelOpts(opts: any) {
+        async modifyBabelOpts(opts: any, args?: any) {
           return await api.applyPlugins({
             type: api.ApplyPluginsType.modify,
             key: 'modifyBabelOpts',
             initialValue: opts,
+            args,
           });
         },
-        async modifyBabelPresetOpts(opts: any) {
+        async modifyBabelPresetOpts(opts: any, args?: any) {
           return await api.applyPlugins({
             type: api.ApplyPluginsType.modify,
             key: 'modifyBabelPresetOpts',
             initialValue: opts,
+            args,
           });
         },
         async chainWebpack(webpackConfig: any, opts: any) {
@@ -71,6 +76,7 @@ export async function getBundleAndConfigs({
       args: {
         ...bundlerArgs,
         type,
+        mfsu,
       },
     });
     return await api.applyPlugins({
@@ -80,6 +86,7 @@ export async function getBundleAndConfigs({
       args: {
         ...bundlerArgs,
         type,
+        mfsu,
       },
     });
   }
@@ -128,7 +135,7 @@ const WARN_AFTER_BUNDLE_GZIP_SIZE = 1.8 * 1024 * 1024;
 const WARN_AFTER_CHUNK_GZIP_SIZE = 1 * 1024 * 1024;
 
 export function printFileSizes(stats: webpack.Stats, dir: string) {
-  const ui = require('cliui')({ width: 80 });
+  const ui = require('@umijs/deps/compiled/cliui')({ width: 80 });
   const json = stats.toJson({
     hash: false,
     modules: false,
@@ -151,7 +158,8 @@ export function printFileSizes(stats: webpack.Stats, dir: string) {
 
   const assets = json.assets
     ? json.assets
-    : json?.children?.reduce((acc, child) => acc.concat(child?.assets), []);
+    : // @ts-ignore
+      json?.children?.reduce((acc, child) => acc.concat(child?.assets), []);
 
   const seenNames = new Map();
   const isJS = (val: string) => /\.js$/.test(val);

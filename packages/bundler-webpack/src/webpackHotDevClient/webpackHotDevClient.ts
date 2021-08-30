@@ -1,8 +1,8 @@
-import SockJS from 'sockjs-client';
-import url from 'url';
 // @ts-ignore
 import * as ErrorOverlay from 'react-error-overlay';
+import SockJS from 'sockjs-client';
 import stripAnsi from 'strip-ansi';
+import url from 'url';
 import formatWebpackMessages from './formatWebpackMessages';
 
 let hadRuntimeError = false;
@@ -20,7 +20,11 @@ function handleHashChange(hash: string) {
   mostRecentCompilationHash = hash;
 }
 
-function handleSuccess() {
+function handleSuccess(data?: { reload: boolean }) {
+  if (data && data.reload) {
+    window.location.reload();
+    return;
+  }
   const isHotUpdate = !isFirstCompilation;
   isFirstCompilation = false;
   hasCompileErrors = false;
@@ -189,7 +193,7 @@ function initSocket() {
         break;
       case 'still-ok':
       case 'ok':
-        handleSuccess();
+        handleSuccess(message.data);
         break;
       case 'warnings':
         handleWarnings(message.data);

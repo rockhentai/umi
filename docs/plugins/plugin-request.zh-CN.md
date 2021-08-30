@@ -1,6 +1,6 @@
 # @umijs/plugin-request
 
-`@umijs/plugin-request` 基于 [umi-request](https://github.com/umijs/umi-request) 和 [@umijs/hooks](https://github.com/umijs/hooks) 的 `useRequest` 提供了一套统一的网络请求和错误处理方案。
+`@umijs/plugin-request` 基于 [umi-request](https://github.com/umijs/umi-request) 和 [ahooks](http://ahooks.js.org/hooks) 的 `useRequest` 提供了一套统一的网络请求和错误处理方案。
 
 ## 启用方式
 
@@ -15,10 +15,10 @@ interface ErrorInfoStructure {
   success: boolean; // if request is success
   data?: any; // response data
   errorCode?: string; // code for errorType
-  errorMessage?: string; // message display to user 
+  errorMessage?: string; // message display to user
   showType?: number; // error display type： 0 silent; 1 message.warn; 2 message.error; 4 notification; 9 page
   traceId?: string; // Convenient for back-end Troubleshooting: unique request ID
-  host?: string; // onvenient for backend Troubleshooting: host of current access server
+  host?: string; // Convenient for backend Troubleshooting: host of current access server
 }
 ```
 
@@ -51,7 +51,7 @@ export default {
 
 #### dataField
 
-* Type: `string`
+- Type: `string`
 
 `dataField` 对应接口统一格式中的数据字段，比如接口如果统一的规范是 `{ success: boolean, data: any}` ，那么就不需要配置，这样你通过 `useRequest` 消费的时候会生成一个默认的 `formatResult`，直接返回 `data` 中的数据，方便使用。如果你的后端接口不符合这个规范，可以自行配置 `dataField` 。配置为 `''` （空字符串）的时候不做处理。
 
@@ -115,9 +115,9 @@ export const request = {
       console.log('B before');
       await next();
       console.log('B after');
-    }
-  ]
-}
+    },
+  ],
+};
 ```
 
 #### requestInterceptors
@@ -132,7 +132,7 @@ export const request = {
 
 ### useRequest
 
-该插件内置了 [@umijs/use-request](https://hooks.umijs.org/zh-CN/async)，你可以在组件内通过该 Hook 简单便捷的消费数据。示例如下：
+该插件内置了 [@ahooksjs/use-request](https://ahooks.js.org/zh-CN/hooks/async)，你可以在组件内通过该 Hook 简单便捷的消费数据。示例如下：
 
 ```typescript
 import { useRequest } from 'umi';
@@ -151,10 +151,12 @@ export default () => {
 };
 ```
 
-更多配置你可以参考  [@umijs/use-request](https://hooks.umijs.org/zh-CN/async) 的文档，相比  `@umijs/use-request` 本身， `import { useRequest } from 'umi';` 有如下两点差异：
+更多配置你可以参考 [@ahooksjs/use-request](https://ahooks.js.org/zh-CN/hooks/async) 的文档，相比 `@umijs/use-request` 本身， `import { useRequest } from 'umi';` 有如下两点差异：
 
 - 按照接口请求规范内置了 `formatResult: res => res?.data` 让你可以更方便的使用数据，当然你也可以自己配置 `formatResult` 来覆盖内置的这个逻辑。
 - 按照接口错误规范统一了错误处理逻辑。
+
+需要注意的是，useRequest 的全局配置，之前为 `import { useAPIProvider } from '@umijs/use-request'`，现在修正为 `import { useRequestProvider } from 'umi'`;
 
 你也可以查看知乎专栏文章[《useRequest- 蚂蚁中台标准请求 Hooks》](https://zhuanlan.zhihu.com/p/106796295)了解 useRequest。
 
@@ -172,7 +174,7 @@ request('/api/user', {
     name: 1,
   },
   skipErrorHandler: true,
-})
+});
 ```
 
 ### RequestConfig
